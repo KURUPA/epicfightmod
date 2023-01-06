@@ -99,7 +99,7 @@ public abstract class WeaponInnateSkill extends Skill {
 		
 		Double baseDamage = Double.valueOf(damage);
 		
-		damage = damageModifier.getTotalValue(playerpatch.getModifiedDamage(null, null, (float)damage));
+		damage = damageModifier.getTotalValue(playerpatch.getModifiedBaseDamage(null, null, (float)damage));
 		armorNegation = armorNegationModifier.getTotalValue((float)armorNegation);
 		impact = impactModifier.getTotalValue((float)impact);
 		maxStrikes = maxStrikesModifier.getTotalValue((float)maxStrikes);

@@ -13,6 +13,7 @@ import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
 import net.minecraft.world.entity.monster.EnderMan;
 import net.minecraft.world.entity.player.Player;
@@ -52,6 +53,7 @@ import yesman.epicfight.network.server.SPPotion.Action;
 import yesman.epicfight.world.capabilities.EpicFightCapabilities;
 import yesman.epicfight.world.capabilities.entitypatch.EntityPatch;
 import yesman.epicfight.world.capabilities.entitypatch.HumanoidMobPatch;
+import yesman.epicfight.world.capabilities.entitypatch.HurtableEntityPatch;
 import yesman.epicfight.world.capabilities.entitypatch.LivingEntityPatch;
 import yesman.epicfight.world.capabilities.entitypatch.mob.EndermanPatch;
 import yesman.epicfight.world.capabilities.entitypatch.player.PlayerPatch;
@@ -71,7 +73,7 @@ public class EntityEvents {
 	@SuppressWarnings("unchecked")
 	@SubscribeEvent
 	public static void spawnEvent(EntityJoinWorldEvent event) {
-		EntityPatch<Entity> entitypatch = EpicFightCapabilities.getEntityPatch(event.getEntity(), LivingEntityPatch.class);
+		EntityPatch<Entity> entitypatch = EpicFightCapabilities.getEntityPatch(event.getEntity(), EntityPatch.class);
 		
 		if (entitypatch != null && !entitypatch.isInitialized()) {
 			entitypatch.onJoinWorld(event.getEntity(), event);
@@ -89,7 +91,7 @@ public class EntityEvents {
 	
 	@SubscribeEvent
 	public static void updateEvent(LivingUpdateEvent event) {
-		LivingEntityPatch<?> entitypatch = EpicFightCapabilities.getEntityPatch(event.getEntityLiving(), LivingEntityPatch.class);
+		EntityPatch<?> entitypatch = EpicFightCapabilities.getEntityPatch(event.getEntityLiving(), EntityPatch.class);
 		
 		if (entitypatch != null && entitypatch.getOriginal() != null) {
 			entitypatch.tick(event);
@@ -98,9 +100,9 @@ public class EntityEvents {
 	
 	@SubscribeEvent
 	public static void knockBackEvent(LivingKnockBackEvent event) {
-		EntityPatch<?> cap = EpicFightCapabilities.getEntityPatch(event.getEntityLiving(), EntityPatch.class);
+		HurtableEntityPatch<?> entitypatch = EpicFightCapabilities.getEntityPatch(event.getEntityLiving(), HurtableEntityPatch.class);
 		
-		if (cap != null) {
+		if (entitypatch != null && entitypatch.shouldCancelKnockback()) {
 			event.setCanceled(true);
 		}
 	}
@@ -112,6 +114,7 @@ public class EntityEvents {
 		
 		if (trueSource != null) {
 			LivingEntityPatch<?> attackerEntityPatch = EpicFightCapabilities.getEntityPatch(trueSource, LivingEntityPatch.class);
+			float baseDamage = event.getAmount();
 			
 			if (event.getSource() instanceof EpicFightDamageSource) {
 				epicFightDamageSource = (EpicFightDamageSource) event.getSource();
@@ -123,11 +126,11 @@ public class EntityEvents {
 				}
 			} else if (attackerEntityPatch != null) {
 				epicFightDamageSource = attackerEntityPatch.getAnimationDamageSource();
+				baseDamage = attackerEntityPatch.getModifiedBaseDamage(trueSource, epicFightDamageSource, baseDamage);
 			}
 			
 			if (epicFightDamageSource != null) {
 				LivingEntity hitEntity = event.getEntityLiving();
-				float baseDamage = event.getAmount();
 				float totalDamage = epicFightDamageSource.getDamageModifier().getTotalValue(baseDamage);
 				
 				if (trueSource instanceof LivingEntity && epicFightDamageSource.getExtraDamages() != null) {
@@ -180,22 +183,22 @@ public class EntityEvents {
 		        
 				if (absorpAmount < 0.0F) {
 					hitEntity.setHealth(hitEntity.getHealth() + absorpAmount);
-		        	LivingEntityPatch<?> attacker = EpicFightCapabilities.getEntityPatch(trueSource, LivingEntityPatch.class);
 		        	
-					if (attacker != null) {
-						attacker.gatherDamageDealt(epicFightDamageSource, calculatedDamage);
+					if (attackerEntityPatch != null) {
+						attackerEntityPatch.gatherDamageDealt(epicFightDamageSource, calculatedDamage);
 					}
 		        }
 		        
 				event.setAmount(totalDamage - trueDamage);
+				
 				if (event.getAmount() + trueDamage > 0.0F) {
-					LivingEntityPatch<?> hitentitypatch = EpicFightCapabilities.getEntityPatch(hitEntity, LivingEntityPatch.class);
+					HurtableEntityPatch<?> hitentitypatch = EpicFightCapabilities.getEntityPatch(hitEntity, HurtableEntityPatch.class);
 					
 					if (hitentitypatch != null) {
-						StaticAnimation hitAnimation = null;
-						float extendStunTime = 0.0F;
+						StunType stunType = StunType.NONE;
+						float stunTime = 0.0F;
 						float knockBackAmount = 0.0F;
-						float weightReduction = 40.0F / (float)hitentitypatch.getWeight();
+						float weight = 40.0F / (float)hitentitypatch.getWeight();
 						float stunShield = hitentitypatch.getStunShield();
 						
 						if (stunShield > 0.0F) {
@@ -205,30 +208,31 @@ public class EntityEvents {
 						switch (epicFightDamageSource.getStunType()) {
 						case SHORT:
 							if (!hitEntity.hasEffect(EpicFightMobEffects.STUN_IMMUNITY.get()) && (hitentitypatch.getStunShield() == 0.0F)) {
-								float totalStunTime = (float) ((0.25F + (epicFightDamageSource.getImpact()) * 0.1F) * weightReduction);
+								float totalStunTime = (0.25F + (epicFightDamageSource.getImpact()) * 0.1F) * weight;
 								totalStunTime *= (1.0F - hitentitypatch.getStunTimeTimeReduction());
 								
 								if (totalStunTime >= 0.1F) {
-									extendStunTime = totalStunTime - 0.1F;
+									stunTime = totalStunTime - 0.1F;
 									boolean flag = totalStunTime >= 0.83F;
-									StunType stunType = flag ? StunType.LONG : StunType.SHORT;
-									extendStunTime = flag ? 0.0F : extendStunTime;
-									hitAnimation = hitentitypatch.getHitAnimation(stunType);
+									stunTime = flag ? 0.83F : stunTime;
+									stunType = flag ? StunType.LONG : StunType.SHORT;
 									knockBackAmount = Math.min(flag ? epicFightDamageSource.getImpact() * 0.05F : totalStunTime, 2.0F);
 								}
 							}
 							break;
 						case LONG:
-							hitAnimation = hitEntity.hasEffect(EpicFightMobEffects.STUN_IMMUNITY.get()) ? null : hitentitypatch.getHitAnimation(StunType.LONG);
-							knockBackAmount = Math.min(epicFightDamageSource.getImpact() * 0.25F * weightReduction, 5.0F);
+							stunType = hitEntity.hasEffect(EpicFightMobEffects.STUN_IMMUNITY.get()) ? StunType.NONE : StunType.LONG;
+							knockBackAmount = Math.min(epicFightDamageSource.getImpact() * 0.25F * weight, 5.0F);
+							stunTime = 0.83F;
 							break;
 						case HOLD:
-							hitAnimation = hitentitypatch.getHitAnimation(StunType.SHORT);
-							extendStunTime = epicFightDamageSource.getImpact() * 0.1F;
+							stunType = StunType.SHORT;
+							stunTime = epicFightDamageSource.getImpact() * 0.1F;
 							break;
 						case KNOCKDOWN:
-							hitAnimation = hitEntity.hasEffect(EpicFightMobEffects.STUN_IMMUNITY.get()) ? null : hitentitypatch.getHitAnimation(StunType.KNOCKDOWN);
+							stunType = hitEntity.hasEffect(EpicFightMobEffects.STUN_IMMUNITY.get()) ? StunType.NONE : StunType.KNOCKDOWN;
 							knockBackAmount = Math.min(epicFightDamageSource.getImpact() * 0.05F, 5.0F);
+							stunTime = 2.0F;
 							break;
 						case FALL:
 							break;
@@ -236,17 +240,16 @@ public class EntityEvents {
 							break;
 						}
 						
+						stunTime *= 1.0F - hitEntity.getAttributeValue(Attributes.KNOCKBACK_RESISTANCE);
 						Vec3 sourcePosition = ((DamageSource)epicFightDamageSource).getSourcePosition();
 						
 						if (sourcePosition != null) {
-							if (hitAnimation != null) {
-								if (!(hitEntity instanceof Player)) {
-									hitEntity.lookAt(EntityAnchorArgument.Anchor.FEET, sourcePosition);
-								}
-								
-								hitentitypatch.setStunReductionOnHit();
-								hitentitypatch.playAnimationSynchronized(hitAnimation, extendStunTime);
+							if (!(hitEntity instanceof Player)) {
+								hitEntity.lookAt(EntityAnchorArgument.Anchor.FEET, sourcePosition);
 							}
+							
+							hitentitypatch.setStunReductionOnHit();
+							hitentitypatch.applyStun(stunType, stunTime);
 							
 							if (knockBackAmount != 0.0F) {
 								hitentitypatch.knockBackEntity(((DamageSource)epicFightDamageSource).getSourcePosition(), knockBackAmount);
@@ -280,7 +283,7 @@ public class EntityEvents {
 		LivingEntityPatch<?> entitypatch = EpicFightCapabilities.getEntityPatch(event.getEntity(), LivingEntityPatch.class);
 		DamageSource damageSource = null;
 		
-		if (entitypatch != null && event.getEntityLiving().getHealth() > 0.0F) {
+		if (event.getEntityLiving().getHealth() > 0.0F) {
 			LivingEntityPatch<?> attackerPatch = EpicFightCapabilities.getEntityPatch(event.getSource().getEntity(), LivingEntityPatch.class);
 			
 			if (event.getSource() instanceof IndirectEntityDamageSource && event.getSource().getDirectEntity() != null) {
@@ -297,7 +300,7 @@ public class EntityEvents {
 				damageSource = event.getSource();
 			}
 			
-			AttackResult result = entitypatch.tryHurt(damageSource, event.getAmount());
+			AttackResult result = (entitypatch != null) ? entitypatch.tryHurt(damageSource, event.getAmount()) : AttackResult.success(event.getAmount());
 			
 			if (attackerPatch != null) {
 				attackerPatch.setLastAttackResult(event.getEntity(), result);

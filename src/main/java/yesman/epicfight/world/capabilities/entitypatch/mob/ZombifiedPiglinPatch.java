@@ -49,7 +49,7 @@ public class ZombifiedPiglinPatch extends HumanoidMobPatch<ZombifiedPiglin> {
 	@Override
 	public AttackResult tryHurt(DamageSource damageSource, float amount) {
 		if (damageSource.getEntity() instanceof ZombifiedPiglin) {
-			return new AttackResult(AttackResult.ResultType.FAILED, amount);
+			return AttackResult.failed(amount);
 		}
 		
 		return super.tryHurt(damageSource, amount);

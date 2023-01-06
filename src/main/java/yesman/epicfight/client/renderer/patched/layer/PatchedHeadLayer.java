@@ -32,7 +32,7 @@ public class PatchedHeadLayer<E extends LivingEntity, T extends LivingEntityPatc
 			ModelPart model = originalRenderer.getParentModel().getHead();
 			E entity = entitypatch.getOriginal();
 			OpenMatrix4f modelMatrix = new OpenMatrix4f();
-			modelMatrix.scale(new Vec3f(-1.0F, -1.0F, 1.0F)).mulFront(entitypatch.getArmature().searchJointById(9).getPoseTransform());
+			modelMatrix.scale(new Vec3f(-1.0F, -1.0F, 1.0F)).mulFront(poses[9]);
 			model.x = 0;
 			model.y = 0;
 			model.z = 0;

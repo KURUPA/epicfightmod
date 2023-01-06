@@ -76,8 +76,8 @@ public abstract class Collider {
 	public void draw(PoseStack matrixStackIn, MultiBufferSource buffer, LivingEntityPatch<?> entitypatch, AttackAnimation animation, float prevElapsedTime, float elapsedTime, float partialTicks, float attackSpeed) {
 		Armature armature = entitypatch.getArmature();
 		int pathIndex =  armature.searchPathIndex(animation.getJointOn(elapsedTime).getName());
-		EntityState state = animation.getState(elapsedTime);
-		EntityState prevState = animation.getState(prevElapsedTime);
+		EntityState state = animation.getState(entitypatch, elapsedTime);
+		EntityState prevState = animation.getState(entitypatch, prevElapsedTime);
 		
 		boolean flag3 = prevState.attacking() || state.attacking() || (prevState.getLevel() < 2 && state.getLevel() > 2);
 		OpenMatrix4f mat = null;

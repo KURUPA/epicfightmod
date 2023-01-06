@@ -14,8 +14,8 @@ public abstract class EntityPatch<T extends Entity> {
 	protected boolean initialized = false;
 	
 	public abstract void tick(LivingUpdateEvent event);
-	protected abstract void clientTick(LivingUpdateEvent event);
-	protected abstract void serverTick(LivingUpdateEvent event);
+	protected void clientTick(LivingUpdateEvent event) {}
+	protected void serverTick(LivingUpdateEvent event) {}
 	
 	public void onStartTracking(ServerPlayer trackingPlayer) {
 	}

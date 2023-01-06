@@ -32,19 +32,19 @@ public class CapabilityEvent {
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@SubscribeEvent
 	public static void attachEntityCapability(AttachCapabilitiesEvent<Entity> event) {
-		EntityPatch entitypatch = EpicFightCapabilities.getEntityPatch(event.getObject(), EntityPatch.class);
+		EntityPatch oldEntitypatch = EpicFightCapabilities.getEntityPatch(event.getObject(), EntityPatch.class);
 		
-		if (entitypatch == null) {
+		if (oldEntitypatch == null) {
 			EntityPatchProvider prov = new EntityPatchProvider(event.getObject());
 			
 			if (prov.hasCapability()) {
-				EntityPatch entityCap = prov.getCapability(EpicFightCapabilities.CAPABILITY_ENTITY).orElse(null);
-				entityCap.onConstructed(event.getObject());
+				EntityPatch entitypatch = prov.getCapability(EpicFightCapabilities.CAPABILITY_ENTITY).orElse(null);
+				entitypatch.onConstructed(event.getObject());
 				event.addCapability(new ResourceLocation(EpicFightMod.MODID, "entity_cap"), prov);
 				
-				if (entityCap instanceof PlayerPatch<?>) {
+				if (entitypatch instanceof PlayerPatch<?>) {
 					if (event.getObject().getCapability(EpicFightCapabilities.CAPABILITY_SKILL).orElse(null) == null) {
-						PlayerPatch<?> playerpatch = (PlayerPatch<?>)entityCap;
+						PlayerPatch<?> playerpatch = (PlayerPatch<?>)entitypatch;
 						
 						if (playerpatch != null) {
 							SkillCapabilityProvider skillProvider = new SkillCapabilityProvider(playerpatch);

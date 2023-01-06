@@ -117,7 +117,7 @@ public abstract class DynamicAnimation {
 		return null;
 	}
 	
-	public EntityState getState(float time) {
+	public EntityState getState(LivingEntityPatch<?> entitypatch, float time) {
 		return EntityState.DEFAULT;
 	}
 	

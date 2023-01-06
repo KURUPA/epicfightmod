@@ -36,7 +36,7 @@ public class EviscerateSkill extends WeaponInnateSkill {
 				if (hitEnemies.size() > 0 && hitEnemies.get(0).isAlive()) {
 					event.getPlayerPatch().reserveAnimation(this.second);
 					event.getPlayerPatch().getServerAnimator().getPlayerFor(null).reset();
-					event.getPlayerPatch().currentlyAttackedEntity.clear();
+					event.getPlayerPatch().getCurrenltyAttackedEntities().clear();
 					this.second.tick(event.getPlayerPatch());
 				}
 			}

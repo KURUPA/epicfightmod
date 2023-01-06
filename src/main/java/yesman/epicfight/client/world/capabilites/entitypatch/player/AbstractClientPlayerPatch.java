@@ -86,7 +86,7 @@ public class AbstractClientPlayerPatch<T extends AbstractClientPlayer> extends P
 					else 
 						animator.baseLayer.animationPlayer.setReversed(false);
 				}
-			} else {
+			} else if (!original.getAbilities().flying) {
 				if (original.isUnderWater() && (original.yCloak - original.yCloakO) < -0.005)
 					currentLivingMotion = LivingMotions.FLOAT;
 				else if (original.yCloak - original.yCloakO < -0.4F || this.airborne)
@@ -112,6 +112,11 @@ public class AbstractClientPlayerPatch<T extends AbstractClientPlayer> extends P
 					else
 						currentLivingMotion = LivingMotions.IDLE;
 				}
+			} else {
+				if (this.isMoving())
+					currentLivingMotion = LivingMotions.CREATIVE_FLY;
+				else
+					currentLivingMotion = LivingMotions.CREATIVE_IDLE;
 			}
 		}
 		

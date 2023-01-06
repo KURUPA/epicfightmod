@@ -107,8 +107,12 @@ public class SkillManager extends SimpleJsonResourceReloadListener {
 				e.printStackTrace();
 			}
 			
-			SKILLS.get(entry.getKey()).setParams(tag);
-			PARAMETER_MAP.put(entry.getKey(), tag);
+			if (SKILLS.containsKey(entry.getKey())) {
+				SKILLS.get(entry.getKey()).setParams(tag);
+				PARAMETER_MAP.put(entry.getKey(), tag);
+			} else {
+				EpicFightMod.LOGGER.warn("Skill " + entry.getKey() + " not exists");
+			}
 		}
 	}
 	

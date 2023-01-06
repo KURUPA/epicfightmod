@@ -20,7 +20,6 @@ import yesman.epicfight.world.capabilities.entitypatch.LivingEntityPatch;
 
 @OnlyIn(Dist.CLIENT)
 public class PHumanoidRenderer<E extends LivingEntity, T extends LivingEntityPatch<E>, M extends HumanoidModel<E>, AM extends HumanoidMesh> extends PatchedLivingEntityRenderer<E, T, M, AM> {
-	
 	private final AM mesh;
 	
 	public PHumanoidRenderer(AM mesh) {

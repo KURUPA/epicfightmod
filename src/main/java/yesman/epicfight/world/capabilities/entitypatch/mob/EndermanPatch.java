@@ -176,7 +176,7 @@ public class EndermanPatch extends MobPatch<EnderMan> {
 									this.playAnimationSynchronized(Animations.ENDERMAN_TP_EMERGENCE, 0.0F);
 								}
 								
-								return new AttackResult(AttackResult.ResultType.FAILED, amount);
+								return AttackResult.failed(amount);
 							}
 						}
 					}

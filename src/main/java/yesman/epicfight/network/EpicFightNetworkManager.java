@@ -18,7 +18,7 @@ import yesman.epicfight.network.server.SPAddSkill;
 import yesman.epicfight.network.server.SPChangeGamerule;
 import yesman.epicfight.network.server.SPChangeLivingMotion;
 import yesman.epicfight.network.server.SPChangePlayerMode;
-import yesman.epicfight.network.server.SPChangePlayerYaw;
+import yesman.epicfight.network.server.SPModifyPlayerData;
 import yesman.epicfight.network.server.SPChangeSkill;
 import yesman.epicfight.network.server.SPClearSkills;
 import yesman.epicfight.network.server.SPDatapackSync;
@@ -78,7 +78,7 @@ public class EpicFightNetworkManager {
 		INSTANCE.registerMessage(id++, SPSpawnData.class, SPSpawnData::toBytes, SPSpawnData::fromBytes, SPSpawnData::handle);
 		INSTANCE.registerMessage(id++, SPChangeLivingMotion.class, SPChangeLivingMotion::toBytes, SPChangeLivingMotion::fromBytes, SPChangeLivingMotion::handle);
 		INSTANCE.registerMessage(id++, SPSetSkillValue.class, SPSetSkillValue::toBytes, SPSetSkillValue::fromBytes, SPSetSkillValue::handle);
-		INSTANCE.registerMessage(id++, SPChangePlayerYaw.class, SPChangePlayerYaw::toBytes, SPChangePlayerYaw::fromBytes, SPChangePlayerYaw::handle);
+		INSTANCE.registerMessage(id++, SPModifyPlayerData.class, SPModifyPlayerData::toBytes, SPModifyPlayerData::fromBytes, SPModifyPlayerData::handle);
 		INSTANCE.registerMessage(id++, SPPlayAnimation.class, SPPlayAnimation::toBytes, SPPlayAnimation::fromBytes, SPPlayAnimation::handle);
 		INSTANCE.registerMessage(id++, SPPlayAnimationInstant.class, SPPlayAnimation::toBytes, SPPlayAnimationInstant::fromBytes, SPPlayAnimation::handle);
 		INSTANCE.registerMessage(id++, SPPlayAnimationAndSetTarget.class, SPPlayAnimationAndSetTarget::toBytes, SPPlayAnimationAndSetTarget::fromBytes, SPPlayAnimationAndSetTarget::handle);

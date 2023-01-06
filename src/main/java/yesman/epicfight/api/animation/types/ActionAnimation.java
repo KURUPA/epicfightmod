@@ -84,7 +84,7 @@ public class ActionAnimation extends MainFrameAnimation {
 			return;
 		}
 		
-		EntityState state = this.getState(entitypatch.getAnimator().getPlayerFor(this).getElapsedTime());
+		EntityState state = this.getState(entitypatch, entitypatch.getAnimator().getPlayerFor(this).getElapsedTime());
 		
 		if (state.inaction()) {
 			LivingEntity livingentity = entitypatch.getOriginal();

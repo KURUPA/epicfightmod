@@ -143,8 +143,8 @@ public class StaticAnimation extends DynamicAnimation {
 	}
 	
 	@Override
-	public final EntityState getState(float time) {
-		return this.stateSpectrum.bindStates(time);
+	public final EntityState getState(LivingEntityPatch<?> entitypatch, float time) {
+		return this.stateSpectrum.bindStates(entitypatch, time);
 	}
 	
 	@Override

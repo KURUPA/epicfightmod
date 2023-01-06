@@ -58,27 +58,26 @@ import yesman.epicfight.world.entity.ai.attribute.EpicFightAttributeSupplier;
 import yesman.epicfight.world.entity.ai.attribute.EpicFightAttributes;
 import yesman.epicfight.world.gamerule.EpicFightGamerules;
 
-public abstract class LivingEntityPatch<T extends LivingEntity> extends EntityPatch<T> {
+public abstract class LivingEntityPatch<T extends LivingEntity> extends HurtableEntityPatch<T> {
 	public static final EntityDataAccessor<Float> STUN_SHIELD = new EntityDataAccessor<Float> (251, EntityDataSerializers.FLOAT);
 	public static final EntityDataAccessor<Float> MAX_STUN_SHIELD = new EntityDataAccessor<Float> (252, EntityDataSerializers.FLOAT);
 	
 	private ResultType lastResultType;
 	private float lastDealDamage;
-	private float stunTimeReduction;
 	
-	private Entity lastTryHurtEntity;
-	private Entity entityBeingInteract;
-	
+	protected Entity lastTryHurtEntity;
+	protected Entity entityBeingInteract;
 	protected Armature armature;
 	protected EntityState state = EntityState.DEFAULT;
 	protected Animator animator;
 	protected Vec3 lastAttackPosition;
 	protected EpicFightDamageSource animationDamageSource;
 	protected boolean airborne;
+	protected boolean isLastAttackSuccess;
+	protected List<LivingEntity> currentlyAttackedEntity;
 	
 	public LivingMotion currentLivingMotion = LivingMotions.IDLE;
 	public LivingMotion currentCompositeMotion = LivingMotions.IDLE;
-	public List<LivingEntity> currentlyAttackedEntity;
 	
 	@Override
 	public void onConstructed(T entityIn) {
@@ -115,27 +114,10 @@ public abstract class LivingEntityPatch<T extends LivingEntity> extends EntityPa
 	}
 	
 	@Override
-	protected void clientTick(LivingUpdateEvent event) {
-	}
-	
-	@Override
-	protected void serverTick(LivingUpdateEvent event) {
-		if (this.stunTimeReduction > 0.0F) {
-			float stunArmor = this.getStunArmor();
-			this.stunTimeReduction -= 0.05F * (1.1F - this.stunTimeReduction * this.stunTimeReduction) * (1.0F - stunArmor / (7.5F + stunArmor));
-			this.stunTimeReduction = Math.max(0.0F, this.stunTimeReduction);
-		}
-	}
-	
-	@Override
 	public void tick(LivingUpdateEvent event) {
 		this.animator.tick();
 		
-		if (this.isLogicalClient()) {
-			this.clientTick(event);
-		} else {
-			this.serverTick(event);
-		}
+		super.tick(event);
 		
 		if (this.original.deathTime == 19) {
 			this.aboutToDeath();
@@ -198,15 +180,16 @@ public abstract class LivingEntityPatch<T extends LivingEntity> extends EntityPa
 	
 	public AttackResult tryHurt(DamageSource damageSource, float amount) {
 		if (this.getEntityState().invulnerableTo(damageSource)) {
-			return new AttackResult(AttackResult.ResultType.FAILED, amount);
+			return AttackResult.failed(amount);
 		}
 		
-		return new AttackResult(AttackResult.ResultType.SUCCESS, amount);
+		return AttackResult.success(amount);
 	}
 	
 	public AttackResult tryHarm(Entity target, EpicFightDamageSource damagesource, float amount) {
 		LivingEntityPatch<?> entitypatch = EpicFightCapabilities.getEntityPatch(target, LivingEntityPatch.class);
-		AttackResult result = (entitypatch != null) ? entitypatch.tryHurt((DamageSource)damagesource, amount) : new AttackResult(AttackResult.ResultType.SUCCESS, amount);
+		AttackResult result = (entitypatch != null) ? entitypatch.tryHurt((DamageSource)damagesource, amount) : AttackResult.success(amount);
+		
 		return result;
 	}
 	
@@ -221,9 +204,13 @@ public abstract class LivingEntityPatch<T extends LivingEntity> extends EntityPa
 		return this.animationDamageSource;
 	}
 	
-	public boolean attackSuccess(Entity target) {
+	public boolean checkAttackSuccess(Entity target) {
 		boolean success = target.is(this.lastTryHurtEntity);
 		this.lastTryHurtEntity = null;
+		
+		if (success && !this.isLastAttackSuccess) {
+			this.setLastAttackSuccess(true);
+		}
 		
 		return success;
 	}
@@ -249,7 +236,11 @@ public abstract class LivingEntityPatch<T extends LivingEntity> extends EntityPa
 	}
 	
 	public AttackResult attack(EpicFightDamageSource damageSource, Entity target, InteractionHand hand) {
-		return this.attackSuccess(target) ? this.getLastAttackResult() : AttackResult.failed();
+		return this.checkAttackSuccess(target) ? this.getLastAttackResult() : AttackResult.failed(0.0F);
+	}
+	
+	public float getModifiedBaseDamage(@Nullable Entity targetEntity, @Nullable EpicFightDamageSource source, float baseDamage) {
+		return baseDamage;
 	}
 	
 	public boolean onDrop(LivingDropsEvent event) {
@@ -258,61 +249,18 @@ public abstract class LivingEntityPatch<T extends LivingEntity> extends EntityPa
 	
 	public void gatherDamageDealt(EpicFightDamageSource source, float amount) {}
 	
-	public void setStunReductionOnHit() {
-		this.stunTimeReduction += Math.max((1.0F - this.stunTimeReduction) * 0.8F, 0.5F);
-		this.stunTimeReduction = Math.min(1.0F, this.stunTimeReduction);
-	}
-	
-	public float getStunTimeTimeReduction() {
-		return this.stunTimeReduction;
-	}
-	
-	public void knockBackEntity(Vec3 sourceLocation, float power) {
-		double d1 = sourceLocation.x() - this.original.getX();
-        double d0;
-        
-		for (d0 = sourceLocation.z() - this.original.getZ(); d1 * d1 + d0 * d0 < 1.0E-4D; d0 = (Math.random() - Math.random()) * 0.01D) {
-            d1 = (Math.random() - Math.random()) * 0.01D;
-        }
-		
-		if (this.original.getRandom().nextDouble() >= this.original.getAttributeValue(Attributes.KNOCKBACK_RESISTANCE)) {
-        	Vec3 vec = this.original.getDeltaMovement();
-        	
-        	this.original.hasImpulse = true;
-            float f = (float) Math.sqrt(d1 * d1 + d0 * d0);
-            
-            double x = vec.x;
-            double y = vec.y;
-            double z = vec.z;
-            
-            x /= 2.0D;
-            z /= 2.0D;
-            x -= d1 / (double)f * (double)power;
-            z -= d0 / (double)f * (double)power;
-
-			if (!this.original.isOnGround()) {
-				y /= 2.0D;
-				y += (double) power;
-
-				if (y > 0.4000000059604645D) {
-					y = 0.4000000059604645D;
-				}
-			}
-			
-            this.original.setDeltaMovement(x, y, z);
-            this.original.hurtMarked = true;
-        }
-	}
-	
+	@Override
 	public float getStunArmor() {
 		AttributeInstance stunArmor = this.original.getAttribute(EpicFightAttributes.STUN_ARMOR.get());
 		return (float) (stunArmor == null ? 0 : stunArmor.getValue());
 	}
 	
+	@Override
 	public float getStunShield() {
 		return this.original.getEntityData().get(STUN_SHIELD).floatValue();
 	}
 	
+	@Override
 	public void setStunShield(float value) {
 		value = Math.max(value, 0);
 		this.original.getEntityData().set(STUN_SHIELD, value);
@@ -327,6 +275,7 @@ public abstract class LivingEntityPatch<T extends LivingEntity> extends EntityPa
 		this.original.getEntityData().set(MAX_STUN_SHIELD, value);
 	}
 	
+	@Override
 	public float getWeight() {
 		return (float)this.original.getAttributeValue(EpicFightAttributes.WEIGHT.get());
 	}
@@ -474,6 +423,16 @@ public abstract class LivingEntityPatch<T extends LivingEntity> extends EntityPa
 	    }
     }
 	
+	@Override
+	public void applyStun(StunType stunType, float stunTime) {
+		this.cancelKnockback = true;
+		StaticAnimation hitAnimation = this.getHitAnimation(stunType);
+		
+		if (hitAnimation != null) {
+			this.playAnimationSynchronized(hitAnimation, stunType.hasFixedStunTime() ? 0.0F : stunTime);
+		}
+	}
+	
 	public void updateHeldItem(CapabilityItem fromCap, CapabilityItem toCap, ItemStack from, ItemStack to, InteractionHand hand) {
 	}
 	
@@ -573,6 +532,10 @@ public abstract class LivingEntityPatch<T extends LivingEntity> extends EntityPa
 		return entity.is(this.entityBeingInteract);
 	}
 	
+	public List<LivingEntity> getCurrenltyAttackedEntities() {
+		return this.currentlyAttackedEntity;
+	}
+	
 	public Vec3 getLastAttackPosition() {
 		return this.lastAttackPosition;
 	}
@@ -599,8 +562,16 @@ public abstract class LivingEntityPatch<T extends LivingEntity> extends EntityPa
 		return false;
 	}
 	
-	public void setAirborne() {
+	public void airborne() {
 		this.airborne = true;
+	}
+	
+	public void setLastAttackSuccess(boolean setter) {
+		this.isLastAttackSuccess = setter;
+	}
+	
+	public boolean isLastAttackSuccess() {
+		return this.isLastAttackSuccess;
 	}
 	
 	public boolean moveHere() {

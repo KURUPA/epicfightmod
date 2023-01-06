@@ -38,6 +38,7 @@ import yesman.epicfight.skill.SkillCategory;
 import yesman.epicfight.skill.SkillContainer;
 import yesman.epicfight.world.entity.eventlistener.MovementInputEvent;
 import yesman.epicfight.world.entity.eventlistener.PlayerEventListener.EventType;
+import yesman.epicfight.world.gamerule.EpicFightGamerules;
 
 @OnlyIn(Dist.CLIENT)
 public class ControllEngine {
@@ -141,7 +142,9 @@ public class ControllEngine {
 	
 	private void switchModeKeyPressed(KeyMapping key, int action) {
 		if (action == 1) {
-			this.playerpatch.toggleMode();
+			if (this.playerpatch.getOriginal().level.getGameRules().getBoolean(EpicFightGamerules.CAN_SWITCH_COMBAT)) {
+				this.playerpatch.toggleMode();
+			}
 		}
 	}
 	

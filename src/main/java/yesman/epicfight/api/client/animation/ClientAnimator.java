@@ -313,6 +313,6 @@ public class ClientAnimator extends Animator {
 	
 	@Override
 	public EntityState getEntityState() {
-		return this.baseLayer.animationPlayer.getAnimation().getState(this.baseLayer.animationPlayer.getElapsedTime());
+		return this.baseLayer.animationPlayer.getAnimation().getState(this.entitypatch, this.baseLayer.animationPlayer.getElapsedTime());
 	}
 }

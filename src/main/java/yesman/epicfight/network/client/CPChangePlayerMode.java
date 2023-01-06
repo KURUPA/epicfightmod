@@ -6,7 +6,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkEvent;
 import yesman.epicfight.network.EpicFightNetworkManager;
-import yesman.epicfight.network.server.SPChangePlayerMode;
+import yesman.epicfight.network.server.SPModifyPlayerData;
 import yesman.epicfight.world.capabilities.EpicFightCapabilities;
 import yesman.epicfight.world.capabilities.entitypatch.player.PlayerPatch;
 import yesman.epicfight.world.capabilities.entitypatch.player.ServerPlayerPatch;
@@ -36,7 +36,7 @@ public class CPChangePlayerMode {
 				if (playerpatch != null) {
 					playerpatch.toMode(msg.mode, false);
 					
-					EpicFightNetworkManager.sendToAllPlayerTrackingThisEntity(new SPChangePlayerMode(player.getId(), playerpatch.getPlayerMode()), player);
+					EpicFightNetworkManager.sendToAllPlayerTrackingThisEntity(new SPModifyPlayerData(player.getId(), playerpatch.getPlayerMode()), player);
 				}
 			}
 		});

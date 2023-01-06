@@ -1,14 +1,17 @@
 package yesman.epicfight.api.animation.types;
 
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.mojang.datafixers.util.Pair;
 
 import net.minecraft.world.damagesource.DamageSource;
 import yesman.epicfight.api.animation.types.EntityState.StateFactor;
 import yesman.epicfight.api.utils.TypeFlexibleHashMap;
+import yesman.epicfight.world.capabilities.entitypatch.LivingEntityPatch;
 
 public class StateSpectrum {
 	private final Set<StatesInTime> timePairs = Sets.newHashSet();
@@ -18,8 +21,8 @@ public class StateSpectrum {
 		this.timePairs.addAll(blueprint.timePairs);
 	}
 	
-	public EntityState bindStates(float time) {
-		TypeFlexibleHashMap<StateFactor<?>> stateMap = this.getStateMap(time);
+	public EntityState bindStates(LivingEntityPatch<?> entitypatch, float time) {
+		TypeFlexibleHashMap<StateFactor<?>> stateMap = this.getStateMap(entitypatch, time);
 		
 		boolean turningLocked = stateMap.getOrDefault(EntityState.TURNING_LOCKED, EntityState.TURNING_LOCKED.getDefaultVal());
 		boolean movementLocked = stateMap.getOrDefault(EntityState.MOVEMENT_LOCKED, EntityState.MOVEMENT_LOCKED.getDefaultVal());
@@ -36,13 +39,12 @@ public class StateSpectrum {
 		return new EntityState(turningLocked, movementLocked, attacking, canBasicAttack, canSkillExecution, inaction, hurt, knockdown, counterAttackable, phaseLevel, invulnerabilityPredicate);
 	}
 	
-	private TypeFlexibleHashMap<StateFactor<?>> getStateMap(float time) {
+	private TypeFlexibleHashMap<StateFactor<?>> getStateMap(LivingEntityPatch<?> entitypatch, float time) {
 		TypeFlexibleHashMap<StateFactor<?>> stateMap = new TypeFlexibleHashMap<>();
 		
 		for (StatesInTime state : this.timePairs) {
 			if (state.start <= time && state.end > time) {
-				
-				for (Pair<StateFactor<?>, ?> timePair : state.states) {
+				for (Pair<StateFactor<?>, ?> timePair : state.getStates(entitypatch)) {
 					stateMap.put(timePair.getFirst(), timePair.getSecond());
 				}
 			}
@@ -55,16 +57,45 @@ public class StateSpectrum {
 		float start;
 		float end;
 		Set<Pair<StateFactor<?>, ?>> states;
+		Map<Integer, Set<Pair<StateFactor<?>, ?>>> conditionalStates;
+		Function<LivingEntityPatch<?>, Integer> condition;
 		
 		public StatesInTime(float start, float end) {
+			this(null, start, end);
+		}
+		
+		public StatesInTime(Function<LivingEntityPatch<?>, Integer> condition, float start, float end) {
 			this.start = start;
 			this.end = end;
-			this.states = Sets.newHashSet();
+			this.condition = condition;
 		}
 		
 		public <T> StatesInTime addState(StateFactor<T> factor, T val) {
+			if (this.states == null) {
+				this.states = Sets.newHashSet();
+			}
+			
 			this.states.add(Pair.of(factor, val));
 			return this;
+		}
+		
+		public <T> StatesInTime addConditionalState(int metadata, StateFactor<T> factor, T val) {
+			if (this.conditionalStates == null) {
+				this.conditionalStates = Maps.newHashMap();
+			}
+			
+			Set<Pair<StateFactor<?>, ?>> states = this.conditionalStates.computeIfAbsent(metadata, (key) -> Sets.newHashSet());
+			states.add(Pair.of(factor, val));
+			
+			return this;
+		}
+		
+		public Set<Pair<StateFactor<?>, ?>> getStates(LivingEntityPatch<?> entitypatch) {
+			if (this.conditionalStates != null && this.condition != null) {
+				return this.conditionalStates.get(this.condition.apply(entitypatch));
+			}
+			
+			return this.states;
 		}
 	}
 	
@@ -73,19 +104,34 @@ public class StateSpectrum {
 		Set<StatesInTime> timePairs = Sets.newHashSet();
 		
 		public Blueprint newTimePair(float start, float end) {
-			this.currentState = new StatesInTime(start, end);
+			return this.newConditionalTimePair(null, start, end);
+		}
+		
+		public Blueprint newConditionalTimePair(Function<LivingEntityPatch<?>, Integer> condition, float start, float end) {
+			this.currentState = new StatesInTime(condition, start, end);
 			this.timePairs.add(this.currentState);
 			return this;
 		}
 		
 		public <T> Blueprint addState(StateFactor<T> factor, T val) {
-			this.currentState.states.add(Pair.of(factor, val));
+			this.currentState.addState(factor, val);
+			return this;
+		}
+		
+		public <T> Blueprint addConditionalState(int metadata, StateFactor<T> factor, T val) {
+			this.currentState.addConditionalState(metadata, factor, val);
 			return this;
 		}
 		
 		public <T> Blueprint addStateRemoveOld(StateFactor<T> factor, T val) {
 			for (StatesInTime timePair : this.timePairs) {
-				timePair.states.removeIf((pair) -> pair.getFirst().equals(factor));
+				if (timePair.conditionalStates != null) {
+					timePair.conditionalStates.values().forEach((set) -> set.removeIf((pair) -> pair.getFirst().equals(factor)));
+				}
+				
+				if (timePair.states != null) {
+					timePair.states.removeIf((pair) -> pair.getFirst().equals(factor));
+				}
 			}
 			
 			return this.addState(factor, val);

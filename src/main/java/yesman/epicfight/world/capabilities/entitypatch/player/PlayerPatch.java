@@ -98,6 +98,8 @@ public abstract class PlayerPatch<T extends Player> extends LivingEntityPatch<T>
 		clientAnimator.addLivingAnimation(LivingMotions.DIGGING, Animations.BIPED_DIG);
 		clientAnimator.addLivingAnimation(LivingMotions.AIM, Animations.BIPED_BOW_AIM);
 		clientAnimator.addLivingAnimation(LivingMotions.SHOT, Animations.BIPED_BOW_SHOT);
+		clientAnimator.addLivingAnimation(LivingMotions.CREATIVE_FLY, Animations.BIPED_CREATIVE_FLYING);
+		clientAnimator.addLivingAnimation(LivingMotions.CREATIVE_IDLE, Animations.BIPED_CREATIVE_IDLE);
 		clientAnimator.setCurrentMotionsAsDefault();
 	}
 	
@@ -113,6 +115,7 @@ public abstract class PlayerPatch<T extends Player> extends LivingEntityPatch<T>
 			if (oldone != null && oldone.getCategory().shouldSynchronized()) {
 				container.setSkill(oldSkill.skillContainers[i].getSkill());
 			}
+			
 			i++;
 		}
 		
@@ -175,7 +178,7 @@ public abstract class PlayerPatch<T extends Player> extends LivingEntityPatch<T>
 		return this.original.getCapability(EpicFightCapabilities.CAPABILITY_SKILL).orElse(CapabilitySkill.EMPTY);
 	}
 	
-	public float getModifiedDamage(@Nullable Entity targetEntity, @Nullable EpicFightDamageSource source, float baseDamage) {
+	public float getModifiedBaseDamage(@Nullable Entity targetEntity, @Nullable EpicFightDamageSource source, float baseDamage) {
 		DealtDamageEvent<PlayerPatch<?>> event = new DealtDamageEvent<>(this, this.original, source, baseDamage);
 		this.getEventListener().triggerEvents(EventType.DEALT_DAMAGE_EVENT_PRE, event);
 		return event.getAttackDamage();

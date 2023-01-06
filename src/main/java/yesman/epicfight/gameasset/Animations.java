@@ -106,6 +106,8 @@ public class Animations {
 	public static StaticAnimation BIPED_KNEEL;
 	public static StaticAnimation BIPED_FALL;
 	public static StaticAnimation BIPED_FLYING;
+	public static StaticAnimation BIPED_CREATIVE_IDLE;
+	public static StaticAnimation BIPED_CREATIVE_FLYING;
 	public static StaticAnimation BIPED_MOUNT;
 	public static StaticAnimation BIPED_JUMP;
 	public static StaticAnimation BIPED_DEATH;
@@ -400,6 +402,8 @@ public class Animations {
 		BIPED_IDLE = new StaticAnimation(true, "biped/living/idle", biped);
 		BIPED_WALK = new MovementAnimation(true, "biped/living/walk", biped);
 		BIPED_FLYING = new StaticAnimation(true, "biped/living/fly", biped);
+		BIPED_CREATIVE_IDLE = new StaticAnimation(true, "biped/living/creative_idle", biped);
+		BIPED_CREATIVE_FLYING = new MovementAnimation(true, "biped/living/creative_fly", biped);
 		BIPED_HOLD_CROSSBOW = new StaticAnimation(true, "biped/living/hold_crossbow", biped);
 		BIPED_RUN = new MovementAnimation(true, "biped/living/run", biped);
 		BIPED_SNEAK = new MovementAnimation(true, "biped/living/sneak", biped);

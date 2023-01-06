@@ -72,7 +72,8 @@ public class SPChangeGamerule {
 	public static enum SynchronizedGameRules {
 		HAS_FALL_ANIMATION(ValueType.BOOLEAN, EpicFightGamerules.HAS_FALL_ANIMATION), 
 		WEIGHT_PENALTY(ValueType.INTEGER, EpicFightGamerules.WEIGHT_PENALTY),
-		DIABLE_ENTITY_UI(ValueType.BOOLEAN, EpicFightGamerules.DISABLE_ENTITY_UI);
+		DIABLE_ENTITY_UI(ValueType.BOOLEAN, EpicFightGamerules.DISABLE_ENTITY_UI),
+		CAN_SWITCH_COMBAT(ValueType.BOOLEAN, EpicFightGamerules.CAN_SWITCH_COMBAT);
 		
 		ValueType valueType;
 		GameRules.Key<?> key;

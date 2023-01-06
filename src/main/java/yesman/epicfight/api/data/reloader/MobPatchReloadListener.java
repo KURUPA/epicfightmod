@@ -83,7 +83,6 @@ public class MobPatchReloadListener extends SimpleJsonResourceReloadListener {
 			}
 			
 			EntityType<?> entityType = ForgeRegistries.ENTITIES.getValue(registryName);
-			
 			CompoundTag tag = null;
 			
 			try {
@@ -260,6 +259,7 @@ public class MobPatchReloadListener extends SimpleJsonResourceReloadListener {
 				CustomMobPatchProvider provider = humanoid ? new CustomHumanoidMobPatchProvider() : new CustomMobPatchProvider();
 				provider.attributeValues = deserializeAttributes(tag.getCompound("attributes"));
 				ResourceLocation modelLocation = new ResourceLocation(tag.getString("model"));
+				modelLocation = new ResourceLocation(modelLocation.getNamespace(), "animmodels/" + modelLocation.getPath() + ".json");
 				
 				if (EpicFightMod.isPhysicalClient()) {
 					Minecraft mc = Minecraft.getInstance();

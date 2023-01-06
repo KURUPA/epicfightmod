@@ -97,6 +97,6 @@ public class ServerAnimator extends Animator {
 	
 	@Override
 	public EntityState getEntityState() {
-		return this.animationPlayer.getAnimation().getState(this.animationPlayer.getElapsedTime());
+		return this.animationPlayer.getAnimation().getState(this.entitypatch, this.animationPlayer.getElapsedTime());
 	}
 }

@@ -8,7 +8,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import yesman.epicfight.api.utils.AttackResult;
-import yesman.epicfight.api.utils.AttackResult.ResultType;
 import yesman.epicfight.world.capabilities.EpicFightCapabilities;
 import yesman.epicfight.world.capabilities.entitypatch.LivingEntityPatch;
 
@@ -21,7 +20,7 @@ public abstract class MixinLivingEntity {
 		LivingEntityPatch<?> selfEntitypatch = EpicFightCapabilities.getEntityPatch(self, LivingEntityPatch.class);
 		
 		if (opponentEntitypatch != null) {
-			opponentEntitypatch.setLastAttackResult(self, new AttackResult(ResultType.BLOCKED, 0));
+			opponentEntitypatch.setLastAttackResult(self, AttackResult.blocked(0.0F));
 			
 			if (selfEntitypatch != null) {
 				opponentEntitypatch.onAttackBlocked(opponentEntitypatch.getAnimationDamageSource().cast(), selfEntitypatch);

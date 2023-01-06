@@ -13,6 +13,7 @@ import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
@@ -38,6 +39,11 @@ public class LocalPlayerPatch extends AbstractClientPlayerPatch<LocalPlayer> {
 	private Minecraft minecraft;
 	private LivingEntity rayTarget;
 	private float prevStamina;
+	
+	private float lockOnXRot;
+	private float lockOnXRotO;
+	private float lockOnYRot;
+	private float lockOnYRotO;
 	
 	@Override
 	public void onConstructed(LocalPlayer entity) {
@@ -100,7 +106,26 @@ public class LocalPlayerPatch extends AbstractClientPlayerPatch<LocalPlayer> {
 			}
 		}
 		
+		this.lockOnXRotO = this.original.getXRot();
+		this.lockOnYRotO = this.original.getYRot();
+		
 		if (this.rayTarget != null) {
+			boolean isLocking = true;
+			
+			if (isLocking) {
+				Vec3 playerPosition = this.original.position();
+				Vec3 targetPosition = this.rayTarget.position();
+				Vec3 toTarget = targetPosition.subtract(playerPosition).normalize();
+				float yaw = (float)(Math.atan2(toTarget.z, toTarget.x) * (180D / Math.PI)) - 90.0F;
+				float pitch = (float)-(Math.atan2(toTarget.y, (float)Math.sqrt(toTarget.x * toTarget.x + toTarget.z * toTarget.z)) * (180D / Math.PI));
+				
+				//Solve -180 -> 180 lerp problem
+				this.lockOnXRotO = this.lockOnXRot;
+				this.lockOnYRotO = this.lockOnYRot;
+				this.lockOnXRot = pitch + 20.0F;
+				this.lockOnYRot = yaw;
+			}
+			
 			if (!this.rayTarget.isAlive() || this.getOriginal().distanceToSqr(this.rayTarget) > 64.0D || this.getAngleTo(this.rayTarget) > 100.0D) {
 				this.rayTarget = null;
 				EpicFightNetworkManager.sendToServer(new CPSetPlayerTarget(-1));
@@ -203,6 +228,22 @@ public class LocalPlayerPatch extends AbstractClientPlayerPatch<LocalPlayer> {
 		return this.prevStamina;
 	}
 	
+	public float getLockOnXRot() {
+		return this.lockOnXRot;
+	}
+
+	public float getLockOnXRotO() {
+		return this.lockOnXRotO;
+	}
+
+	public float getLockOnYRot() {
+		return this.lockOnYRot;
+	}
+
+	public float getLockOnYRotO() {
+		return this.lockOnYRotO;
+	}
+
 	@Override
 	public void openSkillBook(ItemStack itemstack, InteractionHand hand) {
 		if (itemstack.hasTag() && itemstack.getTag().contains("skill")) {

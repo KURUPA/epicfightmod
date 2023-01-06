@@ -30,8 +30,8 @@ public class LinkAnimation extends DynamicAnimation {
 	}
 	
 	@Override
-	public EntityState getState(float time) {
-		return this.nextAnimation.getState(0.0F);
+	public EntityState getState(LivingEntityPatch<?> entitypatch, float time) {
+		return this.nextAnimation.getState(entitypatch, 0.0F);
 	}
 	
 	@Override

@@ -9,8 +9,16 @@ public class AttackResult {
 		this.damage = damage;
 	}
 	
-	public static AttackResult failed() {
-		return new AttackResult(ResultType.FAILED, 0);
+	public static AttackResult success(float damage) {
+		return new AttackResult(ResultType.SUCCESS, damage);
+	}
+	
+	public static AttackResult blocked(float damage) {
+		return new AttackResult(ResultType.BLOCKED, damage);
+	}
+	
+	public static AttackResult failed(float damage) {
+		return new AttackResult(ResultType.FAILED, damage);
 	}
 	
 	public static enum ResultType {

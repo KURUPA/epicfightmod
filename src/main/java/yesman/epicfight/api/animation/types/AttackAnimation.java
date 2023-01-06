@@ -131,6 +131,13 @@ public class AttackAnimation extends ActionAnimation {
 	}
 	
 	@Override
+	public void begin(LivingEntityPatch<?> entitypatch) {
+		super.begin(entitypatch);
+		
+		entitypatch.setLastAttackSuccess(false);
+	}
+	
+	@Override
 	public void tick(LivingEntityPatch<?> entitypatch) {
 		super.tick(entitypatch);
 		
@@ -138,8 +145,8 @@ public class AttackAnimation extends ActionAnimation {
 			AnimationPlayer player = entitypatch.getAnimator().getPlayerFor(this);
 			float elapsedTime = player.getElapsedTime();
 			float prevElapsedTime = player.getPrevElapsedTime();
-			EntityState state = this.getState(elapsedTime);
-			EntityState prevState = this.getState(prevElapsedTime);
+			EntityState state = this.getState(entitypatch, elapsedTime);
+			EntityState prevState = this.getState(entitypatch, prevElapsedTime);
 			Phase phase = this.getPhaseByTime(elapsedTime);
 			
 			if (state.getLevel() == 1 && !state.turningLocked()) {
@@ -157,7 +164,7 @@ public class AttackAnimation extends ActionAnimation {
 			if (prevState.attacking() || state.attacking() || (prevState.getLevel() < 2 && state.getLevel() > 2)) {
 				if (!prevState.attacking() || (phase != this.getPhaseByTime(prevElapsedTime) && (state.attacking() || (prevState.getLevel() < 2 && state.getLevel() > 2)))) {
 					entitypatch.playSound(this.getSwingSound(entitypatch, phase), 0.0F, 0.0F);
-					entitypatch.currentlyAttackedEntity.clear();
+					entitypatch.getCurrenltyAttackedEntities().clear();
 				}
 				
 				this.hurtCollidingEntities(entitypatch, prevElapsedTime, elapsedTime, prevState, state, phase);
@@ -171,10 +178,8 @@ public class AttackAnimation extends ActionAnimation {
 		
 		if (entitypatch instanceof ServerPlayerPatch && isEnd) {
 			ServerPlayerPatch playerpatch = ((ServerPlayerPatch)entitypatch);
-			playerpatch.getEventListener().triggerEvents(EventType.ATTACK_ANIMATION_END_EVENT, new AttackEndEvent(playerpatch, entitypatch.currentlyAttackedEntity, this.getId()));
+			playerpatch.getEventListener().triggerEvents(EventType.ATTACK_ANIMATION_END_EVENT, new AttackEndEvent(playerpatch, entitypatch.getCurrenltyAttackedEntities(), this.getId()));
 		}
-		
-		entitypatch.currentlyAttackedEntity.clear();
 		
 		if (entitypatch instanceof HumanoidMobPatch && entitypatch.isLogicalClient()) {
 			Mob entity = (Mob) entitypatch.getOriginal();
@@ -197,11 +202,11 @@ public class AttackAnimation extends ActionAnimation {
 			HitEntityList hitEntities = new HitEntityList(entitypatch, list, phase.getProperty(AttackPhaseProperty.HIT_PRIORITY).orElse(HitEntityList.Priority.DISTANCE));
 			int maxStrikes = this.getMaxStrikes(entitypatch, phase);
 			
-			while (entitypatch.currentlyAttackedEntity.size() < maxStrikes && hitEntities.next()) {
+			while (entitypatch.getCurrenltyAttackedEntities().size() < maxStrikes && hitEntities.next()) {
 				Entity e = hitEntities.getEntity();
 				LivingEntity trueEntity = this.getTrueEntity(e);
 				
-				if (trueEntity != null && trueEntity.isAlive() && !entitypatch.currentlyAttackedEntity.contains(trueEntity) && !entitypatch.isTeammate(e)) {
+				if (trueEntity != null && trueEntity.isAlive() && !entitypatch.getCurrenltyAttackedEntities().contains(trueEntity) && !entitypatch.isTeammate(e)) {
 					if (e instanceof LivingEntity || e instanceof PartEntity) {
 						if (entity.hasLineOfSight(e)) {
 							EpicFightDamageSource source = this.getEpicFightDamageSource(entitypatch, e, phase);
@@ -221,7 +226,7 @@ public class AttackAnimation extends ActionAnimation {
 							}
 							
 							if (attackResult.resultType.shouldCount()) {
-								entitypatch.currentlyAttackedEntity.add(trueEntity);
+								entitypatch.getCurrenltyAttackedEntities().add(trueEntity);
 							}
 						}
 					}

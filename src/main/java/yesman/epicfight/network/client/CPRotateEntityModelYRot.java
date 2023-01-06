@@ -6,7 +6,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkEvent;
 import yesman.epicfight.network.EpicFightNetworkManager;
-import yesman.epicfight.network.server.SPChangePlayerYaw;
+import yesman.epicfight.network.server.SPModifyPlayerData;
 import yesman.epicfight.world.capabilities.EpicFightCapabilities;
 import yesman.epicfight.world.capabilities.entitypatch.player.PlayerPatch;
 
@@ -37,7 +37,7 @@ public class CPRotateEntityModelYRot {
 				PlayerPatch<?> entitypatch = EpicFightCapabilities.getEntityPatch(player, PlayerPatch.class);
 				
 				if (entitypatch != null) {
-					EpicFightNetworkManager.sendToAllPlayerTrackingThisEntity(new SPChangePlayerYaw(player.getId(), msg.modelYRot), player);
+					EpicFightNetworkManager.sendToAllPlayerTrackingThisEntity(new SPModifyPlayerData(player.getId(), msg.modelYRot), player);
 				}
 			}
 		});

@@ -36,7 +36,7 @@ public class PPlayerRenderer extends PHumanoidRenderer<AbstractClientPlayer, Abs
 		mesh.leftSleeve.hidden = !entity.isModelPartShown(PlayerModelPart.LEFT_SLEEVE);
 		mesh.rightSleeve.hidden = !entity.isModelPartShown(PlayerModelPart.RIGHT_SLEEVE);
 	}
-
+	
 	@Override
 	public HumanoidMesh getMesh(AbstractClientPlayerPatch<AbstractClientPlayer> entitypatch) {
 		return entitypatch.getOriginal().getModelName().equals("slim") ? Meshes.ALEX : Meshes.BIPED;

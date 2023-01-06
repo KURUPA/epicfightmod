@@ -15,6 +15,7 @@ public class EpicFightKeyMappings {
 	public static final KeyMapping DODGE = new KeyMapping("key." + EpicFightMod.MODID + ".dodge", 342, "key." + EpicFightMod.MODID + ".combat");
 	public static final KeyMapping WEAPON_INNATE_SKILL = new WeaponInnateSkillKeyMapping("key." + EpicFightMod.MODID + ".weapon_innate_skill", InputConstants.Type.MOUSE, 0, "key." + EpicFightMod.MODID + ".combat");
 	public static final KeyMapping SKILL_EDIT = new KeyMapping("key." + EpicFightMod.MODID + ".skill_gui", 75, "key." + EpicFightMod.MODID + ".gui");
+	public static final KeyMapping LOCK_ON = new KeyMapping("key." + EpicFightMod.MODID + ".lock_on", InputConstants.Type.MOUSE, 2, "key." + EpicFightMod.MODID + ".combat");
 	
 	public static void registerKeys() {
 		ClientRegistry.registerKeyBinding(WEAPON_INNATE_SKILL_TOOLTIP);
@@ -22,5 +23,6 @@ public class EpicFightKeyMappings {
 		ClientRegistry.registerKeyBinding(DODGE);
 		ClientRegistry.registerKeyBinding(WEAPON_INNATE_SKILL);
 		ClientRegistry.registerKeyBinding(SKILL_EDIT);
+		ClientRegistry.registerKeyBinding(LOCK_ON);
 	}
 }

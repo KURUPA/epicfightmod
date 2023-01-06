@@ -37,7 +37,6 @@ import yesman.epicfight.api.animation.types.DynamicAnimation;
 import yesman.epicfight.api.animation.types.StaticAnimation;
 import yesman.epicfight.api.client.animation.ClientAnimator;
 import yesman.epicfight.api.utils.AttackResult;
-import yesman.epicfight.api.utils.AttackResult.ResultType;
 import yesman.epicfight.api.utils.math.MathUtils;
 import yesman.epicfight.api.utils.math.OpenMatrix4f;
 import yesman.epicfight.gameasset.Animations;
@@ -254,7 +253,7 @@ public class WitherPatch extends MobPatch<WitherBoss> {
 			Entity entity = damageSource.getDirectEntity();
 			
 			if (entity instanceof AbstractArrow) {
-				return new AttackResult(ResultType.FAILED, 0.0F);
+				return AttackResult.failed(0.0F);
 			}
 		}
 		

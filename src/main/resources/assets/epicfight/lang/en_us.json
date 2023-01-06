@@ -85,6 +85,7 @@
 	"gamerule.keepSkills": "Keep skills after death",
 	"gamerule.weightPenalty": "Penalty percent of attack speed by weight",
 	"gamerule.disableEntityUI": "Turn off health bar and target indicator for all players",
+	"gamerule.globalStun": "Enable global stun",
 	
 	"gui.epicfight.skill_edit": "Skills",
 	"gui.epicfight.filter_animation.on": "Filter Animation: ON",

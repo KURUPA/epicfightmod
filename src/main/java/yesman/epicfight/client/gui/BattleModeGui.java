@@ -157,7 +157,6 @@ public class BattleModeGui extends ModIngameGui {
 		
 		boolean creative = playerpatch.getOriginal().isCreative();
 		boolean fullstack = creative || container.isFull();
-		//System.out.println( container.isFull() );
 		boolean isCompatibleWeapon = !container.isDisabled();
 		float cooldownRatio = fullstack ? 1.0F : container.getResource(partialTicks);
 		int vertexNum = 0;

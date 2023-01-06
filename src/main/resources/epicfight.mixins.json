@@ -12,7 +12,8 @@
 	"mixins": [
 		"MixinEndCrystal",
 		"MixinWitherBoss",
-		"MixinLivingEntity"
+		"MixinLivingEntity",
+		"MixinMob"
 	],
 	"injector": {
 		"defaultRequire": 1

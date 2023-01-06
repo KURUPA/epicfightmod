@@ -12,6 +12,8 @@ public class EpicFightGamerules {
 	public static GameRules.Key<GameRules.IntegerValue> WEIGHT_PENALTY;
 	public static GameRules.Key<GameRules.BooleanValue> KEEP_SKILLS;
 	public static GameRules.Key<GameRules.BooleanValue> DISABLE_ENTITY_UI;
+	public static GameRules.Key<GameRules.BooleanValue> GLOBAL_STUN;
+	public static GameRules.Key<GameRules.BooleanValue> CAN_SWITCH_COMBAT;
 	
 	public static void registerRules() {
 		DO_VANILLA_ATTACK = GameRules.register("doVanillaAttack", GameRules.Category.PLAYER, GameRules.BooleanValue.create(ConfigManager.DO_VANILLA_ATTACK.get()));
@@ -24,6 +26,10 @@ public class EpicFightGamerules {
 		KEEP_SKILLS = GameRules.register("keepSkills", GameRules.Category.PLAYER, GameRules.BooleanValue.create(ConfigManager.KEEP_SKILLS.get()));
 		DISABLE_ENTITY_UI = GameRules.register("disableEntityUI", GameRules.Category.MISC, GameRules.BooleanValue.create(ConfigManager.DISABLE_ENTITY_UI.get(), (server, value) -> {
 			EpicFightNetworkManager.sendToAll(new SPChangeGamerule(SynchronizedGameRules.DIABLE_ENTITY_UI, value.get()));
+		}));
+		GLOBAL_STUN = GameRules.register("globalStun", GameRules.Category.MOBS, GameRules.BooleanValue.create(ConfigManager.GLOBAL_STUN.get()));
+		CAN_SWITCH_COMBAT = GameRules.register("canSwitchCombat", GameRules.Category.PLAYER, GameRules.BooleanValue.create(ConfigManager.CAN_SWITCH_COMBAT.get(), (server, value) -> {
+			EpicFightNetworkManager.sendToAll(new SPChangeGamerule(SynchronizedGameRules.CAN_SWITCH_COMBAT, value.get()));
 		}));
 	}
 }

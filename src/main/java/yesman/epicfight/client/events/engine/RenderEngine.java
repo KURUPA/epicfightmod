@@ -118,6 +118,7 @@ public class RenderEngine {
 	private Map<Item, RenderItemBase> itemRendererMapByInstance;
 	private Map<Class<? extends Item>, RenderItemBase> itemRendererMapByClass;
 	private FirstPersonRenderer firstPersonRenderer;
+	private PHumanoidRenderer<?, ?, ?, ?> basicHumanoidRenderer;
 	private OverlayManager overlayManager;
 	private boolean aiming;
 	private int zoomOutTimer = 0;
@@ -143,6 +144,7 @@ public class RenderEngine {
 	
 	public void registerRenderer() {
 		this.firstPersonRenderer = new FirstPersonRenderer();
+		this.basicHumanoidRenderer = new PHumanoidRenderer<>(Meshes.BIPED);
 		
 		this.entityRendererProvider.put(EntityType.CREEPER, PCreeperRenderer::new);
 		this.entityRendererProvider.put(EntityType.ENDERMAN, PEndermanRenderer::new);
@@ -201,18 +203,21 @@ public class RenderEngine {
 	}
 	
 	public void registerCustomEntityRenderer(EntityType<?> entityType, String renderer) {
-		if (renderer == "") {
+		if ("".equals(renderer)) {
 			return;
 		}
 		
-		EntityType<?> presetEntityType = ForgeRegistries.ENTITIES.getValue(new ResourceLocation(renderer));
-		
-		if (this.entityRendererProvider.containsKey(presetEntityType)) {
-			this.entityRendererCache.put(entityType, this.entityRendererProvider.get(presetEntityType).get());
-			return;
+		if ("player".equals(renderer)) {
+			this.entityRendererCache.put(entityType, this.basicHumanoidRenderer);
+		} else {
+			EntityType<?> presetEntityType = ForgeRegistries.ENTITIES.getValue(new ResourceLocation(renderer));
+			
+			if (this.entityRendererProvider.containsKey(presetEntityType)) {
+				this.entityRendererCache.put(entityType, this.entityRendererProvider.get(presetEntityType).get());
+			} else {
+				throw new IllegalArgumentException("Datapack Mob Patch Crash: Invalid Renderer type " + renderer);
+			}
 		}
-		
-		throw new IllegalArgumentException("Datapack Mob Patch Crash: Invalid Renderer type " + renderer);
 	}
 	
 	public RenderItemBase getItemRenderer(Item item) {
@@ -499,7 +504,7 @@ public class RenderEngine {
 											}
 											
 											tooltip.remove(i);
-											tooltip.add(i, new TextComponent(String.format(" %.0f ", playerpatch.getModifiedDamage(null, null, weaponDamage))).append(new TranslatableComponent(Attributes.ATTACK_DAMAGE.getDescriptionId())).withStyle(ChatFormatting.DARK_GREEN));
+											tooltip.add(i, new TextComponent(String.format(" %.0f ", playerpatch.getModifiedBaseDamage(null, null, weaponDamage))).append(new TranslatableComponent(Attributes.ATTACK_DAMAGE.getDescriptionId())).withStyle(ChatFormatting.DARK_GREEN));
 										}
 									}
 								}
@@ -522,6 +527,13 @@ public class RenderEngine {
 				}
 				
 				renderEngine.zoomCount = Math.min(renderEngine.zoomMaxCount, renderEngine.zoomCount);
+			} else if (ClientEngine.instance.getPlayerPatch() != null) {
+				LocalPlayerPatch localPlayerPatch = ClientEngine.instance.getPlayerPatch();
+				
+				if (localPlayerPatch.getTarget() != null) {
+					localPlayerPatch.getOriginal().setXRot((float)Mth.lerp(event.getPartialTicks(), localPlayerPatch.getLockOnXRotO(), localPlayerPatch.getLockOnXRot()));
+					localPlayerPatch.getOriginal().setYRot((float)Mth.lerp(event.getPartialTicks(), localPlayerPatch.getLockOnYRotO(), localPlayerPatch.getLockOnYRot()));
+				}
 			}
 			
 			renderEngine.correctCamera(event, (float)event.getPartialTicks());

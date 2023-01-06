@@ -13,6 +13,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
 import net.minecraft.world.entity.monster.Husk;
 import net.minecraft.world.entity.monster.Skeleton;
@@ -29,6 +30,7 @@ import yesman.epicfight.client.world.capabilites.entitypatch.player.AbstractClie
 import yesman.epicfight.client.world.capabilites.entitypatch.player.LocalPlayerPatch;
 import yesman.epicfight.world.capabilities.EpicFightCapabilities;
 import yesman.epicfight.world.capabilities.entitypatch.EntityPatch;
+import yesman.epicfight.world.capabilities.entitypatch.GlobalMobPatch;
 import yesman.epicfight.world.capabilities.entitypatch.boss.WitherGhostPatch;
 import yesman.epicfight.world.capabilities.entitypatch.boss.WitherPatch;
 import yesman.epicfight.world.capabilities.entitypatch.boss.enderdragon.EnderDragonPatch;
@@ -55,6 +57,7 @@ import yesman.epicfight.world.capabilities.entitypatch.mob.ZombiePatch;
 import yesman.epicfight.world.capabilities.entitypatch.mob.ZombifiedPiglinPatch;
 import yesman.epicfight.world.capabilities.entitypatch.player.ServerPlayerPatch;
 import yesman.epicfight.world.entity.EpicFightEntities;
+import yesman.epicfight.world.gamerule.EpicFightGamerules;
 
 public class EntityPatchProvider implements ICapabilityProvider, NonNullSupplier<EntityPatch<?>> {
 	private static final Map<EntityType<?>, Function<Entity, Supplier<EntityPatch<?>>>> CAPABILITIES = Maps.newHashMap();
@@ -138,6 +141,8 @@ public class EntityPatchProvider implements ICapabilityProvider, NonNullSupplier
 		
 		if (provider != null) {
 			this.capability = provider.apply(entity).get();
+		} else if (entity instanceof Mob && entity.level.getGameRules().getRule(EpicFightGamerules.GLOBAL_STUN).get()) {
+			this.capability = new GlobalMobPatch();
 		}
 	}
 	
