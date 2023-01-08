@@ -5,6 +5,7 @@ import java.util.UUID;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
@@ -38,8 +39,8 @@ public class LocalPlayerPatch extends AbstractClientPlayerPatch<LocalPlayer> {
 	private static final UUID ACTION_EVENT_UUID = UUID.fromString("d1a1e102-1621-11ed-861d-0242ac120002");
 	private Minecraft minecraft;
 	private LivingEntity rayTarget;
+	private boolean targetLockedOn;
 	private float prevStamina;
-	
 	private float lockOnXRot;
 	private float lockOnXRotO;
 	private float lockOnYRot;
@@ -106,30 +107,43 @@ public class LocalPlayerPatch extends AbstractClientPlayerPatch<LocalPlayer> {
 			}
 		}
 		
-		this.lockOnXRotO = this.original.getXRot();
-		this.lockOnYRotO = this.original.getYRot();
-		
 		if (this.rayTarget != null) {
-			boolean isLocking = true;
-			
-			if (isLocking) {
+			if (this.targetLockedOn) {
 				Vec3 playerPosition = this.original.position();
 				Vec3 targetPosition = this.rayTarget.position();
-				Vec3 toTarget = targetPosition.subtract(playerPosition).normalize();
-				float yaw = (float)(Math.atan2(toTarget.z, toTarget.x) * (180D / Math.PI)) - 90.0F;
-				float pitch = (float)-(Math.atan2(toTarget.y, (float)Math.sqrt(toTarget.x * toTarget.x + toTarget.z * toTarget.z)) * (180D / Math.PI));
+				Vec3 toTarget = targetPosition.subtract(playerPosition);
+				Vec3 toTargetNorm = toTarget.normalize();
+				float yaw = (float)(Math.atan2(toTargetNorm.z, toTargetNorm.x) * (180D / Math.PI)) - 90.0F;
+				float pitch = (float)-(Math.atan2(toTargetNorm.y, (float)Math.sqrt(toTargetNorm.x * toTargetNorm.x + toTargetNorm.z * toTargetNorm.z)) * (180D / Math.PI));
 				
-				//Solve -180 -> 180 lerp problem
 				this.lockOnXRotO = this.lockOnXRot;
 				this.lockOnYRotO = this.lockOnYRot;
-				this.lockOnXRot = pitch + 20.0F;
-				this.lockOnYRot = yaw;
+				float lockOnXRotDst = pitch + (1.0F - (float)toTarget.horizontalDistance() * 0.1F) * 50.0F;
+				float lockOnYRotDst = yaw;
+				float xDiff = Mth.wrapDegrees(lockOnXRotDst - this.lockOnXRotO);
+				float yDiff = Mth.wrapDegrees(lockOnYRotDst - this.lockOnYRotO);
+				
+				float xLerp = Mth.clamp(xDiff * 0.4F, -30.0F, 30.0F);
+				float yLerp = Mth.clamp(yDiff * 0.4F, -30.0F, 30.0F);
+				
+				this.lockOnXRot = this.lockOnXRotO + xLerp;
+				this.lockOnYRot = this.lockOnYRotO + yLerp;
+				
+				if (!this.getEntityState().turningLocked()) {
+					this.original.setXRot(lockOnXRotDst);
+					this.original.setYRot(lockOnYRotDst);
+				}
+			} else {
+				this.lockOnXRot = this.original.getXRot();
+				this.lockOnYRot = this.original.getYRot();
 			}
 			
-			if (!this.rayTarget.isAlive() || this.getOriginal().distanceToSqr(this.rayTarget) > 64.0D || this.getAngleTo(this.rayTarget) > 100.0D) {
+			if (!this.rayTarget.isAlive() || this.getOriginal().distanceToSqr(this.rayTarget) > 64.0D || (this.getAngleTo(this.rayTarget) > 100.0D && !this.targetLockedOn)) {
 				this.rayTarget = null;
 				EpicFightNetworkManager.sendToServer(new CPSetPlayerTarget(-1));
 			}
+		} else {
+			this.targetLockedOn = false;
 		}
 	}
 	
@@ -244,6 +258,22 @@ public class LocalPlayerPatch extends AbstractClientPlayerPatch<LocalPlayer> {
 		return this.lockOnYRotO;
 	}
 
+	public float getLerpedLockOnX(double partial) {
+		return Mth.rotLerp((float)partial, this.lockOnXRotO, this.lockOnXRot);
+	}
+	
+	public float getLerpedLockOnY(double partial) {
+		return Mth.rotLerp((float)partial, this.lockOnYRotO, this.lockOnYRot);
+	}
+	
+	public boolean isTargetLockedOn() {
+		return this.targetLockedOn;
+	}
+	
+	public void toggleLockOn() {
+		this.targetLockedOn = !this.targetLockedOn;
+	}
+	
 	@Override
 	public void openSkillBook(ItemStack itemstack, InteractionHand hand) {
 		if (itemstack.hasTag() && itemstack.getTag().contains("skill")) {

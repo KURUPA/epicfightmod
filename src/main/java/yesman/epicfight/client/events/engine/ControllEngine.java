@@ -69,6 +69,7 @@ public class ControllEngine {
 		this.keyFunctions.put(EpicFightKeyMappings.SWITCH_MODE, this::switchModeKeyPressed);
 		this.keyFunctions.put(EpicFightKeyMappings.DODGE, this::dodgeKeyPressed);
 		this.keyFunctions.put(EpicFightKeyMappings.WEAPON_INNATE_SKILL, this::weaponInnateSkillKeyPressed);
+		this.keyFunctions.put(EpicFightKeyMappings.LOCK_ON, this::lockonPressed);
 		
 		try {
 			this.keyHash = (KeyBindingMap) ObfuscationReflectionHelper.findField(KeyMapping.class, "f_90810_").get(null);
@@ -163,6 +164,12 @@ public class ControllEngine {
 					KeyMapping.click(this.options.keyAttack.getKey());
 				}
 			}
+		}
+	}
+	
+	private void lockonPressed(KeyMapping key, int action) {
+		if (action == 1) {
+			this.playerpatch.toggleLockOn();
 		}
 	}
 	

@@ -19,7 +19,6 @@ import yesman.epicfight.world.capabilities.EpicFightCapabilities;
 
 @Mixin(value = MouseHandler.class)
 public abstract class MixinMouseHandler {
-	
 	@Shadow private Minecraft minecraft;
 	@Final @Shadow private SmoothDouble smoothTurnX;
 	@Final @Shadow private SmoothDouble smoothTurnY;
@@ -74,14 +73,15 @@ public abstract class MixinMouseHandler {
 				RenderEngine renderEngine = ClientEngine.instance.renderEngine;
 				
 				if (!playerpatch.getEntityState().turningLocked() || this.minecraft.player.isRidingJumpable()) {
-					
 					if (renderEngine.isPlayerRotationLocked()) {
 						renderEngine.unlockRotation(this.minecraft.player);
 					}
 					
-					this.minecraft.player.turn(d2, d3 * (double)i);
+					if (!playerpatch.isTargetLockedOn()) {
+						this.minecraft.player.turn(d2, d3 * (double)i);
+					}
 				} else {
-					renderEngine.setCameraRotation((float)(d3 * i), (float)d2);
+					renderEngine.rotateCameraByMouseInput((float)(d3 * i), (float)d2);
 				}
 			}
 		} else {
