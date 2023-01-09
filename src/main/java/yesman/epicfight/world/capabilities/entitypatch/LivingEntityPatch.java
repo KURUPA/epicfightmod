@@ -529,7 +529,19 @@ public abstract class LivingEntityPatch<T extends LivingEntity> extends Hurtable
 	}
 	
 	public boolean canPush(Entity entity) {
-		return entity.is(this.entityBeingInteract);
+		LivingEntityPatch<?> entitypatch = EpicFightCapabilities.getEntityPatch(entity, LivingEntityPatch.class);
+		
+		if (entitypatch != null) {
+			EntityState state = entitypatch.getEntityState();
+			
+			if (state.inaction()) {
+				return false;
+			}
+		}
+		
+		EntityState thisState = this.getEntityState();
+		
+		return !thisState.inaction();//!entity.is(this.entityBeingInteract);
 	}
 	
 	public List<LivingEntity> getCurrenltyAttackedEntities() {
