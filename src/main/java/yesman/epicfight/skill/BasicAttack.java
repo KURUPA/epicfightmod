@@ -36,7 +36,11 @@ public class BasicAttack extends Skill {
 		
 		container.getExecuter().getEventListener().addEventListener(EventType.ACTION_EVENT_SERVER, EVENT_UUID, (event) -> {
 			if (!event.getAnimation().isBasicAttackAnimation()) {
-				container.getDataManager().setData(COMBO_COUNTER, 0);
+				CapabilityItem item = event.getPlayerPatch().getHoldingItemCapability(InteractionHand.MAIN_HAND);
+				
+				if (item.shouldCancelCombo(event.getPlayerPatch())) {
+					container.getDataManager().setData(COMBO_COUNTER, 0);
+				}
 			}
 		});
 	}

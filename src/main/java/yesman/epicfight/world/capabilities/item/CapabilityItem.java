@@ -230,6 +230,10 @@ public class CapabilityItem {
 		return true;
 	}
 	
+	public boolean shouldCancelCombo(LivingEntityPatch<?> entitypatch) {
+		return true;
+	}
+	
 	public boolean isEmpty() {
 		return this == CapabilityItem.EMPTY;
 	}

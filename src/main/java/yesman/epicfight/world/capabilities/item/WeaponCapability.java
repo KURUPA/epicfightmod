@@ -38,12 +38,12 @@ public class WeaponCapability extends CapabilityItem {
 	protected final Map<Style, Function<ItemStack, Skill>> innateSkill;
 	protected final Map<Style, Map<LivingMotion, StaticAnimation>> livingMotionModifiers;
 	protected final boolean canBePlacedOffhand;
+	protected final Function<Style, Boolean> comboCancel;
 	
 	protected WeaponCapability(CapabilityItem.Builder builder) {
 		super(builder);
 		
 		WeaponCapability.Builder weaponBuilder = (WeaponCapability.Builder)builder;
-		
 		this.autoAttackMotions = weaponBuilder.autoAttackMotionMap;
 		this.innateSkill = weaponBuilder.innateSkillByStyle;
 		this.livingMotionModifiers = weaponBuilder.livingMotionModifiers;
@@ -55,6 +55,7 @@ public class WeaponCapability extends CapabilityItem {
 		this.hitSound = weaponBuilder.hitSound;
 		this.weaponCollider = weaponBuilder.collider;
 		this.canBePlacedOffhand = weaponBuilder.canBePlacedOffhand;
+		this.comboCancel = weaponBuilder.comboCancel;
 		this.attributeMap.putAll(weaponBuilder.attributeMap);
 	}
 	
@@ -109,6 +110,11 @@ public class WeaponCapability extends CapabilityItem {
 	}
 	
 	@Override
+	public boolean shouldCancelCombo(LivingEntityPatch<?> entitypatch) {
+		return this.comboCancel.apply(this.getStyle(entitypatch));
+	}
+	
+	@Override
 	public Map<LivingMotion, StaticAnimation> getLivingMotionModifier(LivingEntityPatch<?> player, InteractionHand hand) {
 		return (this.livingMotionModifiers == null || hand == InteractionHand.OFF_HAND) ? super.getLivingMotionModifier(player, hand) : this.livingMotionModifiers.get(this.getStyle(player));
 	}
@@ -153,6 +159,7 @@ public class WeaponCapability extends CapabilityItem {
 		Map<Style, List<StaticAnimation>> autoAttackMotionMap;
 		Map<Style, Function<ItemStack, Skill>> innateSkillByStyle;
 		Map<Style, Map<LivingMotion, StaticAnimation>> livingMotionModifiers;
+		Function<Style, Boolean> comboCancel;
 		boolean canBePlacedOffhand;
 		
 		protected Builder() {
@@ -168,6 +175,7 @@ public class WeaponCapability extends CapabilityItem {
 			this.innateSkillByStyle = Maps.newHashMap();
 			this.livingMotionModifiers = null;
 			this.canBePlacedOffhand = true;
+			this.comboCancel = (style) -> true;
 		}
 		
 		@Override
@@ -242,6 +250,11 @@ public class WeaponCapability extends CapabilityItem {
 		
 		public Builder innateSkill(Style style, Function<ItemStack, Skill> innateSkill) {
 			this.innateSkillByStyle.put(style, innateSkill);
+			return this;
+		}
+		
+		public Builder comboCancel(Function<Style, Boolean> comboCancel) {
+			this.comboCancel = comboCancel;
 			return this;
 		}
 	}
