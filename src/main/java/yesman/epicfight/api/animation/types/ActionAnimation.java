@@ -60,6 +60,8 @@ public class ActionAnimation extends MainFrameAnimation {
 				entitypatch.getOriginal().setDeltaMovement(0.0D, entitypatch.getOriginal().getDeltaMovement().y, 0.0D);
 			}
 			
+			entitypatch.correctRotation();
+			
 			ActionAnimationCoordSetter actionCoordSetter = this.getProperty(ActionAnimationProperty.COORD_SET_BEGIN).orElse((self, entitypatch$2, transformSheet) -> {
 				transformSheet.readFrom(self.jointTransforms.get("Root"));
 			});

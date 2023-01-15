@@ -433,6 +433,9 @@ public abstract class LivingEntityPatch<T extends LivingEntity> extends Hurtable
 		}
 	}
 	
+	public void correctRotation() {
+	}
+	
 	public void updateHeldItem(CapabilityItem fromCap, CapabilityItem toCap, ItemStack from, ItemStack to, InteractionHand hand) {
 	}
 	
@@ -541,7 +544,7 @@ public abstract class LivingEntityPatch<T extends LivingEntity> extends Hurtable
 		
 		EntityState thisState = this.getEntityState();
 		
-		return !thisState.inaction();//!entity.is(this.entityBeingInteract);
+		return !thisState.inaction() && !entity.is(this.entityBeingInteract);
 	}
 	
 	public List<LivingEntity> getCurrenltyAttackedEntities() {

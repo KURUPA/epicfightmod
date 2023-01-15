@@ -126,8 +126,6 @@ public class RenderEngine {
 	private int zoomMaxCount = 20;
 	private float cameraXRot;
 	private float cameraYRot;
-	private float cameraXRotO;
-	private float cameraYRotO;
 	private boolean isPlayerRotationLocked;
 	
 	public RenderEngine() {
@@ -336,18 +334,11 @@ public class RenderEngine {
 		if (!this.isPlayerRotationLocked) {
 			this.cameraXRot = this.minecraft.player.getXRot();
 			this.cameraYRot = this.minecraft.player.getYRot();
-			this.cameraXRotO = this.minecraft.player.xRotO;
-			this.cameraYRotO = this.minecraft.player.yRotO;
 			this.isPlayerRotationLocked = true;
 		}
 		
-		this.cameraXRot += f;
+		this.cameraXRot = Mth.clamp(this.cameraXRot + f, -90.0F, 90.0F);
 		this.cameraYRot += f1;
-		this.cameraXRot = Mth.clamp(this.cameraXRot, -90.0F, 90.0F);
-		
-		this.cameraXRotO += f;
-		this.cameraYRotO += f1;
-		this.cameraXRotO = Mth.clamp(this.cameraXRotO, -90.0F, 90.0F);
 	}
 	
 	public boolean isPlayerRotationLocked() {
@@ -358,32 +349,34 @@ public class RenderEngine {
 		if (this.isPlayerRotationLocked) {
 			cameraEntity.setXRot(this.cameraXRot);
 			cameraEntity.setYRot(this.cameraYRot);
+			this.isPlayerRotationLocked = false;
 		}
-		
-		this.isPlayerRotationLocked = false;
 	}
 	
 	public void correctCamera(CameraSetup event, float partialTicks) {
 		LocalPlayerPatch localPlayerPatch = ClientEngine.instance.getPlayerPatch();
 		Camera camera = event.getCamera();
 		CameraType cameraType = this.minecraft.options.getCameraType();
-		float xRot = 0.0F;
-		float yRot = 0.0F;
 		boolean hasAnyCorrection = false;
 		
 		if (localPlayerPatch != null) {
 			if (localPlayerPatch.getTarget() != null && localPlayerPatch.isTargetLockedOn()) {
-				xRot = localPlayerPatch.getLerpedLockOnX(event.getPartialTicks());
-				yRot = localPlayerPatch.getLerpedLockOnY(event.getPartialTicks());
+				this.cameraXRot = localPlayerPatch.getLerpedLockOnX(event.getPartialTicks());
+				this.cameraYRot = localPlayerPatch.getLerpedLockOnY(event.getPartialTicks());
+				hasAnyCorrection = true;
+			} else if (this.isPlayerRotationLocked) {
+				if (!localPlayerPatch.getEntityState().turningLocked()) {
+					this.unlockRotation(this.minecraft.player);
+				}
+				
 				hasAnyCorrection = true;
 			}
-		} else if (this.isPlayerRotationLocked) {
-			xRot = this.cameraXRotO + (this.cameraXRot - this.cameraXRotO) * partialTicks;
-			yRot = this.cameraYRotO + (this.cameraYRot - this.cameraYRotO) * partialTicks;
-			hasAnyCorrection = true;
 		}
 		
 		if (hasAnyCorrection) {
+			float xRot = this.cameraXRot;
+			float yRot = this.cameraYRot;
+			
 			if (cameraType.isMirrored()) {
 				yRot += 180.0F;
 				xRot *= -1.0F;

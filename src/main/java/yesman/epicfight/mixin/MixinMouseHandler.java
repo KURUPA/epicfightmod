@@ -72,21 +72,23 @@ public abstract class MixinMouseHandler {
 				LocalPlayerPatch playerpatch = EpicFightCapabilities.getEntityPatch(this.minecraft.player, LocalPlayerPatch.class);
 				RenderEngine renderEngine = ClientEngine.instance.renderEngine;
 				
-				if (!playerpatch.getEntityState().turningLocked() || this.minecraft.player.isRidingJumpable()) {
-					if (renderEngine.isPlayerRotationLocked()) {
-						renderEngine.unlockRotation(this.minecraft.player);
-					}
-					
-					if (!playerpatch.isTargetLockedOn()) {
-						this.minecraft.player.turn(d2, d3 * (double)i);
-					}
+				if (playerpatch == null) {
+					this.minecraft.player.turn(d2, d3 * (double)i);
 				} else {
-					renderEngine.rotateCameraByMouseInput((float)(d3 * i), (float)d2);
+					if (!playerpatch.getEntityState().turningLocked() || this.minecraft.player.isRidingJumpable()) {
+						if (!playerpatch.isTargetLockedOn()) {
+							this.minecraft.player.turn(d2, d3 * (double)i);
+						}
+					} else {
+						renderEngine.rotateCameraByMouseInput((float)(d3 * i), (float)d2);
+					}
 				}
 			}
 		} else {
 			this.accumulatedDX = 0.0D;
 			this.accumulatedDY = 0.0D;
 		}
+		
+		info.cancel();
 	}
 }
