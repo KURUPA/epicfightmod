@@ -126,6 +126,12 @@ public class ActiveGuardSkill extends GuardSkill {
 	
 	@Nullable
 	protected StaticAnimation getGuardMotion(PlayerPatch<?> playerpatch, CapabilityItem itemCapability, BlockType blockType) {
+		StaticAnimation animation = itemCapability.getGuardMotion(this, blockType, playerpatch);
+		
+		if (animation != null) {
+			return animation;
+		}
+		
 		if (blockType == BlockType.ADVANCED_GUARD) {
 			StaticAnimation[] motions = (StaticAnimation[])this.getGuradMotionMap(blockType).getOrDefault(itemCapability.getWeaponCategory(), (a, b) -> null).apply(itemCapability, playerpatch);
 			

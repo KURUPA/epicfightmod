@@ -38,6 +38,7 @@ import yesman.epicfight.network.EpicFightNetworkManager;
 import yesman.epicfight.network.server.SPChangeSkill;
 import yesman.epicfight.particle.EpicFightParticles;
 import yesman.epicfight.particle.HitParticleType;
+import yesman.epicfight.skill.GuardSkill;
 import yesman.epicfight.skill.Skill;
 import yesman.epicfight.skill.SkillCategories;
 import yesman.epicfight.skill.SkillContainer;
@@ -224,6 +225,10 @@ public class CapabilityItem {
 	
 	public Style getStyle(LivingEntityPatch<?> entitypatch) {
 		return this.canBePlacedOffhand() ? Styles.ONE_HAND : Styles.TWO_HAND;
+	}
+	
+	public StaticAnimation getGuardMotion(GuardSkill skill, GuardSkill.BlockType blockType, PlayerPatch<?> playerpatch) {
+		return null;
 	}
 	
 	public boolean canBePlacedOffhand() {

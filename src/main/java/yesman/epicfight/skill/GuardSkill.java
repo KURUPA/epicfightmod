@@ -270,6 +270,12 @@ public class GuardSkill extends Skill {
 	 */
 	@Nullable
 	protected StaticAnimation getGuardMotion(PlayerPatch<?> playerpatch, CapabilityItem itemCapability, BlockType blockType) {
+		StaticAnimation animation = itemCapability.getGuardMotion(this, blockType, playerpatch);
+		
+		if (animation != null) {
+			return animation;
+		}
+		
 		return (StaticAnimation)this.getGuradMotionMap(blockType).getOrDefault(itemCapability.getWeaponCategory(), (a, b) -> null).apply(itemCapability, playerpatch);
 	}
 	
@@ -341,7 +347,7 @@ public class GuardSkill extends Skill {
 		return false;
 	}
 	
-	protected static enum BlockType {
+	public static enum BlockType {
 		GUARD_BREAK, GUARD, ADVANCED_GUARD
 	}
 }
