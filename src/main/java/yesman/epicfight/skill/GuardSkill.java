@@ -251,6 +251,12 @@ public class GuardSkill extends Skill {
 	}
 	
 	protected boolean isHoldingWeaponAvailable(PlayerPatch<?> playerpatch, CapabilityItem itemCapability, BlockType blockType) {
+		StaticAnimation anim = itemCapability.getGuardMotion(this, blockType, playerpatch);
+		
+		if (anim != null) {
+			return true;
+		}
+		
 		Map<WeaponCategory, BiFunction<CapabilityItem, PlayerPatch<?>, ?>> guardMotions = this.getGuradMotionMap(blockType);
 		
 		if (!guardMotions.containsKey(itemCapability.getWeaponCategory())) {
@@ -258,6 +264,7 @@ public class GuardSkill extends Skill {
 		}
 		
 		Object motion = guardMotions.get(itemCapability.getWeaponCategory()).apply(itemCapability, playerpatch);
+		
 		return motion != null;
 	}
 	
